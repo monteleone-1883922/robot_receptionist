@@ -41,6 +41,7 @@ def movimento1(bBox,dim,spostamenti,tentativi,diedcell):
         gira+=1
     #return to hall
     say("mapping complete")
+    return dummy,pos
 
 
 
@@ -135,12 +136,21 @@ def movimento2(bBox,dim,directions):
     
     for j in range(mapDim[1]):
         for i in range(mapDim[0]-1):
-            forward(1)
-            findChairs(directions)
-        left(1)
-        forward(1)
-        findChairs(directions)
-        left(1)
+            forward(dim)
+            #findChairs(directions)
+        if j != mapDim[1] -1 :
+            left(1)
+            forward(dim)
+            #findChairs(directions)
+            left(1)
+    
+    if mapDim[1] % 2 == 0:
+        pos = (0,mapDim[1]-1)
+    else:
+        pos = (mapDim[0]-1,mapDim[1]-1)
+    say("mapping complete")
+
+    return mapDim,pos
 
 #movimento senza ostacoli--------------------------------------------------------------------------------------------------------------
 
@@ -148,23 +158,28 @@ def movimento2(bBox,dim,directions):
 def freeMoveTo(mapDim,dim,src,trg):
    if src[0] != trg[0] and src[1] != trg[1]:
       dir= findDiag(src,trg)
-      n= min(src[0] - trg[0],src[1] - trg[1])
+      n= min(abs(src[0] - trg[0]),abs(src[1] - trg[1]))
       turn(dir, ref ="ABS")
       forward(n*dim * math.sqrt(2))
+      src = updateSrc(src,trg,n)
    dir,n = findDir(src,trg)
    turn(dir,ref ="ABS")
    forward(n*dim)
       
 
+def updateSrc(src,trg,n):
+    a = trg[0] - src[0]
+    b = trg[1] - src[1]
+    return (src[0] + n * a/abs(a),src[1] + n * b/abs(b) )
+
+
 def findDiag(src,trg):
-   a= src[0] - trg[0]
-   b= src[1] - trg[1]
    c=1
    d=0
-   if a < 0:
+   if src[0] > trg[0]:
       d=180
       c=-1
-   if b > 0:
+   if src[1] > trg[1]:
       d+= c*45
    else :
       d+= c*-45
@@ -173,15 +188,15 @@ def findDiag(src,trg):
 def findDir(src,trg):
    a=0
    b=0
-   if src[0] == trg[0]:
-      a = src[1] - trg[1]
-      if a < 0:
+   if src[1] == trg[1]:
+      a = src[0] - trg[0]
+      if a > 0:
          b=180
    else :
-      a = src[0] - trg[0]
-      if a> 0:
-         b=90
-      else:
+      a = src[1] - trg[1]
+      if a > 0:
          b=-90
-   return b,a
+      else:
+         b=90
+   return b,abs(a)
    

@@ -1,20 +1,84 @@
 
 import math
+from marrtino_apps.program.robot_receptionist.free_movement import mapLookup
 
 from robot_cmd_ros import *
 
 from free_movement import mapCreate
 
 # mapping sistematico con ostacoli-------------------------------------------------------------------------------------------------
-def obstacleSistematicMapping(bBox,dim):
+def obstacleSistematicMapping(bBox,dim,err):
     map=mapCreate(bBox,dim)
+    mapDim = getMapDim(map)
+    pos = (0,0)
     mapping = True
+    backward = False
     while mapping:
+        if tryRight(dim,err,map,(pos[0], pos[1] + 1),mapDim):
+            mapUpdate(map,(pos[0], pos[1] + 1),-1)
+            forward(dim)
+            if obstacleMapLookup(map,(pos[0], pos[1] + 1)) >= 0 :
+                backward = False
+
+
+
+
+        elif tryForward(dim,err,map,(pos[0] + 1, pos[1]),mapDim,backward):
+            if obstacleMapLookup(map,(pos[0] + 1, pos[1])) == -1:
+                mapUpdate(map,(pos[0] + 1, pos[1]),-2)
+            else:
+                if obstacleMapLookup(map,(pos[0] + 1, pos[1])) >= 0 :
+                    backward = False
+                mapUpdate(map,(pos[0] + 1, pos[1]),-1)
+            forward(dim)
+
+
+        elif tryLeft(dim,err,map,(pos[0], pos[1] - 1)):
+            mapUpdate(map,(pos[0], pos[1] - 1),-1)
+            forward(dim)
+            if obstacleMapLookup(map,(pos[0], pos[1] - 1)) >= 0 :
+                backward = False
+
+
+
+        elif tryBackward(dim,err,map,pos,mapDim):
+            backward = True
+            mapUpdate(map,(pos[0], pos[1] - 1),-2)
+            forward(dim)
 
 
 
 
 
+
+
+def tryRight(dim,err,map,pos,mapDim):
+    right(1)
+    if pos[1] < mapDim[1] and obstacle_distance() > dim + err and obstacleMapLookup(map,pos) >= 0 :
+        return True
+    if pos[1] < mapDim[1] and obstacle_distance() <= dim + err:
+        mapUpdate(map,pos,-3)
+    left(1)
+
+def tryForward(dim,err,map,pos,mapDim,backward):
+    val= obstacleMapLookup(map,pos)
+    if pos[0] < mapDim[0] and obstacle_distance() > dim + err and (val >= 0 or  (val==-1 and backward)):
+        return True
+    if pos[0] < mapDim[0] and obstacle_distance() <= dim + err:
+        mapUpdate(map,pos,-3)
+
+def tryLeft(dim,err,map,pos):
+    
+    left(1)
+    if pos[1] >= 0 and obstacle_distance() > dim + err and obstacleMapLookup(map,pos) >= 0 :
+        return True
+    if pos[1] >= 0 and obstacle_distance() <= dim + err:
+        mapUpdate(map,pos,-3)
+    left(1)
+
+def tryBackward(dim,err,map,pos):
+    newpos = (pos[0]-1, pos[1])
+    return newpos[0] >= 0 and obstacle_distance() > dim + err and obstacleMapLookup(map,newpos) >= 0
 
 
 #movimento con ostacoli-------------------------------------------------------------------------------------------------------------
@@ -97,7 +161,7 @@ def addNeighbours(cell,pos,map,visitati,visitare,val):
     for i in range(-1,2):
         for j in range(-1,2):
             cella = (cell[0]+i,cell[1]+j)
-            if validCell(cella,mapDim,visitati):
+            if validCell(cella,mapDim,visitati) and i*i + j*j != 2:
                 
                 if compareCell(cella,pos):
                     return False

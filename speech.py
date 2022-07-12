@@ -15,15 +15,16 @@ def speakToGuest():
     gender = None
     while findname: 
         answ = asr()
-        answ = answ.strip(chars="hello")
-        answ = answ.strip(chars="hi")
-        answ = answ.strip(chars="my name is")
+        answ = adjustString(answ)
+        answ = answ.strip("hello")
+        answ = answ.strip("hi")
+        answ = answ.strip("my name is")
         answ = answ.strip()
         if len(answ.split()) == 1:
             name = answ
             say("so your name is " + name + " right?")
             answ = asr()
-            answ = answ.strip()
+            answ = adjustString(answ)
             if answ.find("yes") != -1 :
                 findname = False
         if findname:
@@ -33,7 +34,7 @@ def speakToGuest():
     say("do you want me to refer you as male or female?")
     while gender == None :
         answ = asr()
-        answ = answ.strip()
+        answ = adjustString(answ)
         if "female" in answ.split() :
             gender = Gender.female
         elif "male" in answ.split() :
@@ -45,6 +46,7 @@ def speakToGuest():
     say("ok and what's your favourite drink " + name + "?")
     while findrink:
         answ = asr() 
+        answ = adjustString(answ)
         answ = answ.strip("my favourite drink is")
         answ = answ.strip("i like")
         answ = answ.strip()
@@ -55,7 +57,7 @@ def speakToGuest():
         else:
             say("so your favourite drink is " + drink + "isn't it?")
         answ = asr()
-        answ = answ.strip()
+        answ = adjustString(answ)
         if answ.find("yes") != -1 :
             findrink = False
         if findrink:
@@ -63,7 +65,12 @@ def speakToGuest():
     
     return (name,gender,drink)
 
-
+def adjustString(string):
+    newstring = string.lower()
+    newstring = newstring.strip()
+    newstring = newstring.strip("google")
+    newstring = newstring.strip("sky")
+    return newstring
 
 def introduceGuest(name,gender,drink):
     say("hi john," + gender[0] + "  is " + name)
