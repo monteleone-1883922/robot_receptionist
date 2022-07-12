@@ -59,28 +59,35 @@ def updateMapAndPos(map,pos,dir):
     return p
 #rimanere in mappa
 def moveRobot(dir,dim):
-    #destra
+    #sinistra
     if dir[0] ==0   and dir[1]  ==1    :
         turn(90,ref="ABS")
         forward(dim)
+    #destra
     elif dir[0] ==0   and dir[1]  == -1     :
         turn(-90,ref="ABS")
         forward(dim)
+    #avanti
     elif dir[0] == 1  and dir[1]  == 0    :
         turn(0,ref="ABS")
         forward(dim)
+    #indietro
     elif dir[0] == -1  and dir[1]  == 0    :
         turn(180,ref="ABS")
         forward(dim)
+    #alto sinistra
     elif dir[0] == 1  and dir[1]  == 1     :
         turn(45,ref="ABS")
         forward(dim*math.sqrt(2))
+    #alto destra
     elif dir[0] ==  1 and dir[1]  ==  -1   :
         turn(-45,ref="ABS")
         forward(dim*math.sqrt(2))
+    #basso sinistra
     elif dir[0] ==  -1 and dir[1]  ==  1   :
         turn(135,ref="ABS")
         forward(dim*math.sqrt(2))
+    #basso destra
     elif dir[0] ==  -1 and dir[1]  ==  -1   :
         turn(-135,ref="ABS")
         forward(dim*math.sqrt(2))
@@ -179,10 +186,12 @@ def findDiag(src,trg):
    if src[0] > trg[0]:
       d=180
       c=-1
+    #destra
    if src[1] > trg[1]:
-      d+= c*45
-   else :
       d+= c*-45
+    #sinistra
+   else :
+      d+= c*45
    return d
       
 def findDir(src,trg):
@@ -194,8 +203,10 @@ def findDir(src,trg):
          b=180
    else :
       a = src[1] - trg[1]
+      #destra
       if a > 0:
          b=-90
+      #sinistra
       else:
          b=90
    return b,abs(a)

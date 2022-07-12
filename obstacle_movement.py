@@ -122,7 +122,7 @@ def findDirection(map,pos,numCelle):
         for j in range(-1,2):
             cella = (pos[0]+i,pos[1]+j)
             val = obstacleMapLookup(map,cella)
-            if val >=0 and val < m:
+            if val >=0 and val < m and i*i + j*j != 2:
                 m=val
                 dir = getDir(i,j)
                 newpos = (pos[0]+i,pos[1]+j)
@@ -130,20 +130,28 @@ def findDirection(map,pos,numCelle):
 
 
 def getDir(a,b):
+    #sinistra
     if a ==0   and b  ==1    :
         return 90
+    #destra
     elif a ==0   and b  ==-1    :
         return -90   
+    #avanti
     elif a ==1   and b  ==0    :
         return 0
+    #indietro
     elif a ==-1   and b  ==0    :
         return 180
+    #alto sinistra
     elif a ==1   and b  ==1    :
         return 45
+    #alto destra
     elif a ==1   and b  ==-1    :
         return -45
+    #basso sinistra
     elif a ==-1   and b  ==1    :
         return 135
+    #basso destra
     elif a ==-1   and b  ==-1    :
         return -135
 
