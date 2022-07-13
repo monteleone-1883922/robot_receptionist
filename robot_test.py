@@ -1,8 +1,11 @@
-from robot_cmd_ros import *
+# Write your robot program hereenable
+
 import math
 from random import randint
 
-from vision import findChairs
+
+
+enableObstacleAvoidance(False)
 
 
 
@@ -12,7 +15,7 @@ def movimento1(bBox,dim,spostamenti,tentativi,diedcell):
     diedcell-=1
     map,pos,dummy = mapCreate(bBox,dim)
     gira=0
-    
+    say("i am in" + str(pos))
     while gira<spostamenti:
         m= diedcell+1
         sceglidir=True
@@ -210,4 +213,11 @@ def findDir(src,trg):
       else:
          b=90
    return b,abs(a)
-   
+
+#right(1.5)
+
+a,b=movimento1((1.5,1),0.5,5,6,2)
+
+display(str(a) + " " + str(b))
+
+freeMoveTo(a,0.5,b,(1,0))

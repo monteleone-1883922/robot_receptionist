@@ -7,27 +7,43 @@ class Gender(enum.Enum):
     male  = ("he","his" , "him")
     female = ("she", "her", "her")
 
+class Guest:
+    def __init__(self,name,gender,drink):
+        self.name = name
+        self.gender = gender
+        self.drink = drink
+        
+
+
+
+
 def speakToGuest():
     
     say("hello , what's your name?")
     answ = name = ""
     findname = findrink = True
     gender = None
+    list=["hello","hi","my", "name", "is"]
+    oldansw = ""
     while findname: 
+        
         answ = asr()
-        answ = adjustString(answ)
-        answ = answ.strip("hello")
-        answ = answ.strip("hi")
-        answ = answ.strip("my name is")
-        answ = answ.strip()
-        if len(answ.split()) == 1:
-            name = answ
+        a = adjustString(answ,list)
+        name = " ".join(a)
+        if oldansw == name and name != "":
+            findname = False
+        elif name != "" :
             say("so your name is " + name + " right?")
+        
             answ = asr()
             answ = adjustString(answ)
-            if answ.find("yes") != -1 :
+                
+            if "yes" in answ :
                 findname = False
+            elif "no" in answ:
+                oldansw = ""
         if findname:
+            oldansw = name
             say("sorry can you repeat your name")
 
     
@@ -35,49 +51,70 @@ def speakToGuest():
     while gender == None :
         answ = asr()
         answ = adjustString(answ)
-        if "female" in answ.split() :
+        if isFemale(answ) :
             gender = Gender.female
-        elif "male" in answ.split() :
+        elif isMale(answ) :
             gender = Gender.male
         else:
             say("please choose male or female, the first one if you want me to use the pronoun he, or the second one if you want me to use the pronoun she")
     
+
     
     say("ok and what's your favourite drink " + name + "?")
+    list = ["my", "favourite", "drink", "is", "i", "like"]
+    oldansw=""
     while findrink:
         answ = asr() 
-        answ = adjustString(answ)
-        answ = answ.strip("my favourite drink is")
-        answ = answ.strip("i like")
-        answ = answ.strip()
-        drink = answ
-        if answ == "i don't know" or answ == "i don't  have a favourite drink" or answ == "i haven't got a favourite drink":
-            drink = " doesn't have a favourite drink"
-            say("so you don't have a favourite drink, isn't it?")
-        else:
-            say("so your favourite drink is " + drink + "isn't it?")
-        answ = asr()
-        answ = adjustString(answ)
-        if answ.find("yes") != -1 :
+        answ = adjustString(answ,list)
+        
+        drink = " ".join(answ)
+        if drink == oldansw and drink != "":
             findrink = False
+        elif drink != "":
+            if  "don't" in answ or  "not" in answ or "haven't" in answ or "no" in answ:
+                drink = " doesn't have a favourite drink"
+                say("so you don't have a favourite drink, isn't it?")
+            else:
+                say("so your favourite drink is " + drink + "isn't it?")
+            answ = asr()
+            answ = adjustString(answ)
+            if "yes" in answ :
+                findrink = False
+            elif "no" in answ:
+                oldansw = ""
         if findrink:
+            oldansw = drink
             say("then what's your favourite drink?")
-    
-    return (name,gender,drink)
+    say("ok thank you")
+    return Guest(name,gender,drink)
 
-def adjustString(string):
+def isFemale(list):
+    return "female" in list or "she" in list or "woman" in list or "girl" in list or "second" in list
+def isMale(list):
+    return "male" in list or "he" in list or "man" in list or "boy" in list or "first" in list
+
+def adjustString(string,list=[]):
     newstring = string.lower()
     newstring = newstring.strip()
-    newstring = newstring.strip("google")
-    newstring = newstring.strip("sky")
+    newstring = newstring.split()
+
+    list.append("google")
+    list.append("sky")
+    
+    for x in range(len(newstring)-1,-1,-1):
+        if newstring[x] in list:
+            newstring.pop(x)
+
+
     return newstring
 
-def introduceGuest(name,gender,drink):
-    say("hi john," + gender[0] + "  is " + name)
-    if drink == " doesn't have a favourite drink":
-        say(gender[0] + drink)
+def introduceGuest(guest):
+    gender=guest.genere.value
+    say("hi john," + gender[0] + "  is " + guest.name)
+    if guest.drink == " doesn't have a favourite drink":
+        say(gender[0] + guest.drink)
     else:
-        say(gender[1] + " favourite drink is " + drink)
+        say(gender[1] + " favourite drink is " + guest.drink)
     
 
 
