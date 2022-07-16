@@ -2,14 +2,22 @@
 #
 import sys,os,cv2
 
-sys.path.append(os.getcwd() + "\marrtino_apps\program")
+from pyzbar.pyzbar import decode
+from classi import Chair 
+
+#from marrtino_apps.program.robot_cmd_ros import tag_id, tag_trigger
+
+#sys.path.append(os.getcwd() + "\marrtino_apps\program")
 
 #from robot_cmd_ros import *
+
+
 
 #testare!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 def detectGuest():
     while True:
         img = getImage()
+        img = cv2.imread(os.getenv('MARRTINO_APPS_HOME')+'/www/viewer/img/lastimage.jpg')
         faces = fixedFaceDetection(img)
         if len(faces) > 1 :
             #dialogo per far si che si mostri un guest alla volta
@@ -49,7 +57,7 @@ def fixedFaceDetection(img,size):
     return faces
 
 
-def findChairs(directions):
+def findChairs2(directions):
     # correggere in base a directions
     deg=4/directions
     n=0
@@ -57,5 +65,37 @@ def findChairs(directions):
         right(deg)
         #trova sedia
         n+=deg
+
+#versione 1
+def findChairs(img,pos,chairs,qrDecoder):
+    data,bbox,rectifiedImage = qrDecoder.detectAndDecode(img)
+    if data == "https://qr.net/TQGDFa":
+        say("lessgooo")
+        
+
+
+
+
+
+    # codes = decode(img)
+    # if len(codes) == 1 and codes[0].data == b'https://qr.net/TQGDFa':
+    #     chairs.append(Chair(pos))
+        
+
+
+
+# def findChairs(img,dist,ang, dist):
+#     if tag_trigger() and tag_id() == 0:
+#         if ang:
+a = "C:\\Users\\Alex\\Downloads\\TQGDFa.png"
+
+imm = cv2.imread(a)
+
+ 
+qrDecoder = cv2.QRCodeDetector()
+
+
+findChairs(imm,9,3,qrDecoder)
+
 
 

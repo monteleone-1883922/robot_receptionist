@@ -7,6 +7,9 @@ from vision import findChairs
 
 
 
+
+
+
 #mapping randomico----------------------------------------------------------------------------------------------
 def movimento1(bBox,dim,spostamenti,tentativi,diedcell):
     diedcell-=1

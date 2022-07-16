@@ -221,3 +221,128 @@ a,b=movimento1((1.5,1),0.5,5,6,2)
 display(str(a) + " " + str(b))
 
 freeMoveTo(a,0.5,b,(1,0))
+# obstacle test ---------------------------------------------------------------------------------------------------------
+
+
+
+
+ # mapping sistematico con ostacoli-------------------------------------------------------------------------------------------------
+def obstacleSistematicMapping(bBox,dim,err):
+    map=mapCreate(bBox,dim)
+    mapDim = getMapDim(map)
+    display(str(mapDim))
+    numCelle = mapDim[0] * mapDim[1]
+    pos = (0,0)
+    mapping = True
+    backward = False
+    count = 0
+    while mapping:
+        say("movement " + str(count))
+        if count == numCelle:
+            mapping=False
+        elif tryRight(dim,err,map,(pos[0], pos[1] + 1),mapDim):
+            say("right")
+            count += 1
+            mapUpdate(map,(pos[0], pos[1] + 1),-1)
+            forward(dim)
+            if obstacleMapLookup(map,(pos[0], pos[1] + 1)) >= 0 :
+                backward = False
+            pos = (pos[0],pos[1]+1)
+
+
+
+
+        elif tryForward(dim,err,map,(pos[0] + 1, pos[1]),mapDim,backward):
+            say("forward")
+            if obstacleMapLookup(map,(pos[0] + 1, pos[1])) == -1:
+                mapUpdate(map,(pos[0] + 1, pos[1]),-2)
+            else:
+                count += 1
+                if obstacleMapLookup(map,(pos[0] + 1, pos[1])) >= 0 :
+                    backward = False
+                mapUpdate(map,(pos[0] + 1, pos[1]),-1)
+            forward(dim)
+
+
+        elif tryLeft(dim,err,map,(pos[0], pos[1] - 1)):
+            say("left")
+            count += 1
+            mapUpdate(map,(pos[0], pos[1] - 1),-1)
+            forward(dim)
+            if obstacleMapLookup(map,(pos[0], pos[1] - 1)) >= 0 :
+                backward = False
+
+
+
+        elif tryBackward(dim,err,map,pos,mapDim):
+            say("backward")
+            backward = True
+            mapUpdate(map,(pos[0], pos[1] - 1),-2)
+            forward(dim)
+        else:
+            mapping = False
+
+
+
+
+
+
+
+def tryRight(dim,err,map,pos,mapDim):
+    right(1)
+    if pos[1] < mapDim[1] and obstacle_distance() > dim + err and obstacleMapLookup(map,pos) >= 0 :
+        return True
+    if pos[1] < mapDim[1] and obstacle_distance() <= dim + err:
+        mapUpdate(map,pos,-3)
+    left(1)
+
+def tryForward(dim,err,map,pos,mapDim,backward):
+    val= obstacleMapLookup(map,pos)
+    if pos[0] < mapDim[0] and obstacle_distance() > dim + err and (val >= 0 or  (val==-1 and backward)):
+        return True
+    if pos[0] < mapDim[0] and obstacle_distance() <= dim + err:
+        mapUpdate(map,pos,-3)
+
+def tryLeft(dim,err,map,pos):
+    
+    left(1)
+    if pos[1] >= 0 and obstacle_distance() > dim + err and obstacleMapLookup(map,pos) >= 0 :
+        return True
+    if pos[1] >= 0 and obstacle_distance() <= dim + err:
+        mapUpdate(map,pos,-3)
+    left(1)
+
+def tryBackward(dim,err,map,pos):
+    newpos = (pos[0]-1, pos[1])
+    return newpos[0] >= 0 and obstacle_distance() > dim + err and obstacleMapLookup(map,newpos) >= -1
+
+def mapCreate(bBox,dim):
+    map=[]
+    n = int(bBox[0]//dim)
+    m = int(bBox[1]//dim)
+    for i in range(n):
+        l=[]
+        for j in range(m):
+            l.append(-1)
+        map.append(l)
+    return map,(int(n//2),int(m//2)),(n,m)
+
+
+def getMapDim(map):
+   return len(map), len(map[0])
+
+
+def mapUpdate(map,cella,val):
+    map[cella[0]][cella[1]] = val
+
+
+
+def obstacleMapLookup(map,pos):
+    return map[pos[0]][pos[1]]
+
+
+say("start")
+
+
+obstacleSistematicMapping((5,0.5),0.5,-0.1)
+
