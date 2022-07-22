@@ -2,10 +2,10 @@
 #
 import sys,os,cv2
 
-from pyzbar.pyzbar import decode
+#from pyzbar.pyzbar import decode
 from classi import Chair 
 
-#from marrtino_apps.program.robot_cmd_ros import tag_id, tag_trigger
+
 
 sys.path.append(os.getcwd() + "\marrtino_apps\program")
 
@@ -71,8 +71,12 @@ def findChairs2(directions,pos):
             say("saving chair position")
 
 
+
+def findChairs(img,pos,chairs):
+    findChairsTag(img,pos,chairs)
+
 #with qrcode and cv2
-def findChairs(img,pos,chairs,qrDecoder):
+def findChairsQR1(img,pos,chairs,qrDecoder):
     data,bbox,rectifiedImage = qrDecoder.detectAndDecode(img)
     if data == "https://qr.net/TQGDFa":
         chairs.append(Chair(pos))
@@ -80,17 +84,17 @@ def findChairs(img,pos,chairs,qrDecoder):
 
 
 
-
-
-    # codes = decode(img)
-    # if len(codes) == 1 and codes[0].data == b'https://qr.net/TQGDFa':
-    #     chairs.append(Chair(pos))
+#with pyzbar
+def findChairsQR2(img,pos,chairs):
+    codes = decode(img)
+    if len(codes) == 1 and codes[0].data == b'https://qr.net/TQGDFa':
+        chairs.append(Chair(pos))
         
 
 
-
-# def findChairs(img,dist,ang, dist):
-#     if tag_trigger() and tag_id() == 0:
-#         if ang:
+#with tag recognition module
+def findChairsTag(img, pos, chairs):
+    if tag_trigger() and tag_id() == 0:
+        chairs.append(Chair(pos))
 
 
