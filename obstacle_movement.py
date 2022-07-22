@@ -65,7 +65,7 @@ def obstacleSistematicMapping(bBox,dim,err):
             forward(dim)
         else:
             mapping = False
-
+    return map,pos
 
 
 
@@ -81,8 +81,7 @@ def tryRight(err,map,pos):
     left(1)
 
 def tryForward(err,map,pos,backward):
-    val= map.lookup(pos)
-    if map.validCell(pos) and obstacle_distance() > map.dim + err and (val >= 0 or  (val==-1 and backward)):
+    if map.validCell(pos) and obstacle_distance() > map.dim + err and (map.lookup(pos) >= 0 or  (map.lookup(pos)==-1 and backward)):
         return True
     if map.validCell(pos) and obstacle_distance() <= map.dim + err:
         map.updateCell(pos,-3)
@@ -102,50 +101,48 @@ def tryBackward(err,map,pos):
 
 #movimento con ostacoli-------------------------------------------------------------------------------------------------------------
 
-def obstacleMoveTo(map,dim,src,trg):
-    mapUpdate(map,trg,0)
-    cell=trg
+def obstacleMoveTo(map,src,trg):
+    map.updateCell(trg,0)
+    cell= trg.copy()
     visitati = {trg}
     i=0
     val=0
     visitare=[]
+    #addneighbours deve arrivare a src partendo da trg
     while addNeighbours(cell,src,map,visitati,visitare,val):
         cell=visitare[i]
-        val = obstacleMapLookup(map,cell)
+        val = map.lookup(cell)
         i+=1
-    obstacleMoveRobot(map,src,dim)
+    obstacleMoveRobot(map,src)
 
 
-def obstacleMoveRobot(map,pos,dim):
-    n,m = getMapDim(map)
-    numCelle=n*m 
-    p = numCelle
+def obstacleMoveRobot(map,pos): 
+    p = map.numCelle
     s=0
     while p != 0:
-        dir, p, pos = findDirection(map,pos,numCelle)
-        turn(dir,ref = "ABS")
-        if dir%90 == 0:
-            s=dim
+        p = findDirection(map,pos)
+        turn(pos.th,ref = "ABS")
+        if pos.th%90 == 0:
+            s=map.dim
         else:
-            s=dim*math.sqrt(2)
+            s=map.dim*math.sqrt(2)
         forward(s)
         
 
 
 
-def findDirection(map,pos,numCelle):
-    m=numCelle+1
-    dir=0
-    newpos = pos
+def findDirection(map,pos):
+    m=map.numCelle+1
     for i in range(-1,2):
         for j in range(-1,2):
-            cella = (pos[0]+i,pos[1]+j)
-            val = obstacleMapLookup(map,cella)
+            cella = pos.tryUpdate(Pos(i,j))
+            val = map.lookup(cella)
             if val >=0 and val < m and i*i + j*j != 2:
                 m=val
-                dir = getDir(i,j)
-                newpos = (pos[0]+i,pos[1]+j)
-    return dir,m ,newpos
+                pos.update()
+                pos.th = getDir(i,j)
+                
+    return m 
 
 
 def getDir(a,b):
@@ -184,17 +181,18 @@ def obstacleMapLookup(map,pos):
 
 
 def addNeighbours(cell,pos,map,visitati,visitare,val):
-    mapDim=getMapDim(map)
+    
     for i in range(-1,2):
         for j in range(-1,2):
-            cella = (cell[0]+i,cell[1]+j)
-            if validCell(cella,mapDim,visitati) and i*i + j*j != 2:
+            cella = cell.tryUpdate(Pos(i,j))
+            if validCell(cella,visitati) and i*i + j*j != 2:
                 
-                if compareCell(cella,pos):
+                if cella == pos :
                     return False
-                mapUpdate(map,cella,val+1)
-                visitare.append(cella)
-                visitati.add(cella)
+                map.updateCell(cella,val+1)
+                c = cella.copy()
+                visitare.append(c)
+                visitati.add(c)
                 
     return True
 
@@ -205,9 +203,10 @@ def mapUpdate(map,cella,val):
 def compareCell(a,b):
     return a[0] == b[0] and a[1] == b[1]
 
-#eliminare spostamenti diagonali
-def validCell(cell,mapDim,visitati):
-    return (cell not in visitati) and cell[0]>=0 and cell[1]>=0 and cell[0] < mapDim[0] and cell[1] < mapDim[1] and map[cell[0]][cell[1]] != -3
+
+
+def validCell(cell,visitati):
+    return (cell not in visitati) and map.validCell(cell) and map.lookup(cell) != -3
 
 def getMapDim(map):
    return len(map), len(map[0])

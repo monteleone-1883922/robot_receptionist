@@ -7,7 +7,8 @@ class Map:
         self.dim= dim
         n = int(bBox[0]//dim)
         m = int(bBox[1]//dim)
-        self.size = (n,m)
+        self.n = n
+        self.m = m
         self.mappa = []
         self.numCelle = n * m
         for i in range(n):
@@ -15,6 +16,17 @@ class Map:
             for j in range(m):
                 l.append(0)
             self.mappa.append(l)
+
+    def __str__(self) -> str:
+        a=""
+        for x in self.mappa:
+            a = a + str(x) + "\n"
+        
+        return a[:-1]
+    
+    def middlePos(self):
+        return Position(self.n//2, self.m//2)
+
 
     def lookup(self,cell):
         return self.mappa[cell.x][cell.y]
@@ -29,7 +41,7 @@ class Map:
         return self.mappa[cell.x+ dir.x][cell.y + dir.y]
 
     def validCell(self,pos):
-        return pos.x >= 0 and pos.x < self.n and pos.y >= 0 and pos.y <= self.m
+        return pos.x >= 0 and pos.x < self.n and pos.y >= 0 and pos.y < self.m
 
         
 
@@ -58,12 +70,19 @@ class Position:
         self.y = y
         self.th = th
         self.nextPosition = None
+
+    def __hash__(self) -> int:
+        return self.x+self.y + self.x*self.y
         
     def __eq__(self, __o: object) -> bool:
-        return self.x == __o.x and self.y == __o.y and self.th == __o.th
+        return self.x == __o.x and self.y == __o.y #and self.th == __o.th
+    
+    def copy(self):
+        return Position(self.x,self.y,self.th)
 
-    def tryUpdate(self,dir):
-        dir = self.turn(dir)
+    def tryUpdate(self,dir,fix=True):
+        if fix:
+            dir = self.turn(dir)
         th = dir.value.th
         x = self.x + dir.value.x
         y = self.y + dir.value.y
@@ -96,11 +115,19 @@ class Position:
              
 
 class Directions(enum.Enum):
-    right = Position(0,-1,90)
-    left = Position(0,1,-90)
+    right = Position(0,-1,-90)
+    left = Position(0,1,90)
     forward = Position(1,0,0)
     backward = Position(-1,0,180)
 
-    
+class GlobalData:
+    def __init__(self,tries,diedCell):
+        self.itself = None
+        self.tries = tries
+        self.diedCell = diedCell
 
+    def createGlobalData(self):
+        self.itself = GlobalData(6,3)
+
+        
         

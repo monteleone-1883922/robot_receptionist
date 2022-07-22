@@ -3,6 +3,8 @@
 import math
 from random import randint
 
+from marrtino_apps.program.robot_cmd_ros import enableObstacleAvoidance
+
 
 
 enableObstacleAvoidance(False)
@@ -227,60 +229,167 @@ freeMoveTo(a,0.5,b,(1,0))
 
 
  # mapping sistematico con ostacoli-------------------------------------------------------------------------------------------------
+import enum
+
+
+
+class Map:
+    def __init__(self,bBox,dim):
+        self.dim= dim
+        n = int(bBox[0]//dim)
+        m = int(bBox[1]//dim)
+        self.n = n
+        self.m = m
+        self.mappa = []
+        self.numCelle = n * m
+        for i in range(n):
+            l=[]
+            for j in range(m):
+                l.append(0)
+            self.mappa.append(l)
+
+    def __str__(self) -> str:
+        a=""
+        for x in self.mappa:
+            a = a + str(x) + "\n"
+        
+        return a[:-1]
+
+
+    def lookup(self,cell):
+        return self.mappa[cell.x][cell.y]
+
+    def updateCell(self,cell,val):
+        self.mappa[cell.x][cell.y] = val
+
+    def addVal(self,cell,val):
+        self.mappa[cell.x][cell.y] += val
+
+    def predictLookup(self,cell,dir):
+        return self.mappa[cell.x+ dir.x][cell.y + dir.y]
+
+    def validCell(self,pos):
+        return pos.x >= 0 and pos.x < self.n and pos.y >= 0 and pos.y < self.m
+
+
+
+
+class Position:
+    def __init__(self,x,y,th=361):
+        self.x =x
+        self.y = y
+        self.th = th
+        self.nextPosition = None
+    
+    def __hash__(self) -> int:
+        return self.x+self.y + self.x*self.y
+        
+    def __eq__(self, __o: object) -> bool:
+        return self.x == __o.x and self.y == __o.y #and self.th == __o.th
+    
+    def copy(self):
+        return Position(self.x,self.y,self.th)
+
+    def tryUpdate(self,dir):
+        dir = self.turn(dir)
+        th = dir.value.th
+        x = self.x + dir.value.x
+        y = self.y + dir.value.y
+        self.nextPosition = Position(x,y,th)
+        return self.nextPosition
+    
+    def update(self):
+        self.x = self.nextPosition.x
+        self.y = self.nextPosition.y
+        self.th = self.nextPosition.th
+        self.nextPosition = None
+    
+    def turn(self,dir):
+        #sali
+        if ( self.th == 0 and dir == Directions.forward ) or (self.th == -90 and dir == Directions.left) \
+             or (self.th == 90 and dir == Directions.right) or (self.th == 180 and dir == Directions.backward) :
+             return Directions.forward
+        #destra
+        elif ( self.th == 0 and dir == Directions.right ) or (self.th == -90 and dir == Directions.forward) \
+             or (self.th == 90 and dir == Directions.backward) or (self.th == 180 and dir == Directions.left) :
+             return Directions.right
+        #sinistra
+        elif ( self.th == 0 and dir == Directions.left ) or (self.th == -90 and dir == Directions.backward) \
+             or (self.th == 90 and dir == Directions.forward) or (self.th == 180 and dir == Directions.right) :
+             return Directions.left
+        #scendi
+        elif ( self.th == 0 and dir == Directions.backward ) or (self.th == -90 and dir == Directions.right) \
+             or (self.th == 90 and dir == Directions.left) or (self.th == 180 and dir == Directions.forward) :
+             return Directions.backward
+             
+
+class Directions(enum.Enum):
+    right = Position(0,-1,90)
+    left = Position(0,1,-90)
+    forward = Position(1,0,0)
+    backward = Position(-1,0,180)
+
+
 def obstacleSistematicMapping(bBox,dim,err):
-    map=mapCreate(bBox,dim)
-    mapDim = getMapDim(map)
-    display(str(mapDim))
-    numCelle = mapDim[0] * mapDim[1]
-    pos = (0,0)
-    mapping = True
+    map=Map(bBox,dim)
+    #mapDim = getMapDim(map)
+    #numCelle = mapDim[0] * mapDim[1]
+
+    pos = Position(0,0,0)
+    map.updateCell(pos,-1)
     backward = False
+    mapping = True
     count = 0
     while mapping:
-        say("movement " + str(count))
-        if count == numCelle:
+        if count == map.numCelle:
             mapping=False
-        elif tryRight(dim,err,map,(pos[0], pos[1] + 1),mapDim):
+        elif tryRight(err,map,pos.tryUpdate(Directions.right)):
             say("right")
             count += 1
-            mapUpdate(map,(pos[0], pos[1] + 1),-1)
+            pos.update()
+            map.updateCell(pos,-1)
             forward(dim)
-            if obstacleMapLookup(map,(pos[0], pos[1] + 1)) >= 0 :
+            if map.lookup(pos) >= 0 :
                 backward = False
-            pos = (pos[0],pos[1]+1)
 
 
 
 
-        elif tryForward(dim,err,map,(pos[0] + 1, pos[1]),mapDim,backward):
+        elif tryForward(err,map,pos.tryUpdate(Directions.forward),backward):
             say("forward")
-            if obstacleMapLookup(map,(pos[0] + 1, pos[1])) == -1:
-                mapUpdate(map,(pos[0] + 1, pos[1]),-2)
+            pos.update()
+            if map.lookup(pos) == -1:
+                map.updateCell(pos,-2)
             else:
                 count += 1
-                if obstacleMapLookup(map,(pos[0] + 1, pos[1])) >= 0 :
+                if map.lookup(pos) >= 0 :
                     backward = False
-                mapUpdate(map,(pos[0] + 1, pos[1]),-1)
+                map.updateCell(pos,-1)
             forward(dim)
 
 
-        elif tryLeft(dim,err,map,(pos[0], pos[1] - 1)):
+        elif tryLeft(err,map,pos.tryUpdate(Directions.left)):
             say("left")
             count += 1
-            mapUpdate(map,(pos[0], pos[1] - 1),-1)
+            pos.update()
+            map.updateCell(pos,-1)
             forward(dim)
-            if obstacleMapLookup(map,(pos[0], pos[1] - 1)) >= 0 :
+            if map.lookup(pos) >= 0 :
                 backward = False
 
 
 
-        elif tryBackward(dim,err,map,pos,mapDim):
+        elif tryBackward(err,map,pos.tryUpdate(Directions.backward)):
             say("backward")
             backward = True
-            mapUpdate(map,(pos[0], pos[1] - 1),-2)
+            map.updateCell(pos,-2)
+            pos.update()
+            map.updateCell(pos,-2)
             forward(dim)
         else:
             mapping = False
+        display(str(map))
+    return map,pos
 
 
 
@@ -288,61 +397,141 @@ def obstacleSistematicMapping(bBox,dim,err):
 
 
 
-def tryRight(dim,err,map,pos,mapDim):
+def tryRight(err,map,pos):
     right(1)
-    if pos[1] < mapDim[1] and obstacle_distance() > dim + err and obstacleMapLookup(map,pos) >= 0 :
+    if map.validCell(pos) and obstacle_distance() > map.dim + err and map.lookup(pos) >= 0 :
         return True
-    if pos[1] < mapDim[1] and obstacle_distance() <= dim + err:
-        mapUpdate(map,pos,-3)
+    if map.validCell(pos) and obstacle_distance() <= map.dim + err:
+        map.updateCell(pos,-3)
     left(1)
 
-def tryForward(dim,err,map,pos,mapDim,backward):
-    val= obstacleMapLookup(map,pos)
-    if pos[0] < mapDim[0] and obstacle_distance() > dim + err and (val >= 0 or  (val==-1 and backward)):
+def tryForward(err,map,pos,backward):
+    val= map.lookup(pos)
+    if map.validCell(pos) and obstacle_distance() > map.dim + err and (val >= 0 or  (val==-1 and backward)):
         return True
-    if pos[0] < mapDim[0] and obstacle_distance() <= dim + err:
-        mapUpdate(map,pos,-3)
+    if map.validCell(pos) and obstacle_distance() <= map.dim + err:
+        map.updateCell(pos,-3)
 
-def tryLeft(dim,err,map,pos):
+def tryLeft(err,map,pos):
     
     left(1)
-    if pos[1] >= 0 and obstacle_distance() > dim + err and obstacleMapLookup(map,pos) >= 0 :
+    if map.validCell(pos) and obstacle_distance() > map.dim + err and map.lookup(pos) >= 0 :
         return True
-    if pos[1] >= 0 and obstacle_distance() <= dim + err:
-        mapUpdate(map,pos,-3)
+    if map.validCell(pos) and obstacle_distance() <= map.dim + err:
+        map.updateCell(pos,-3)
     left(1)
 
-def tryBackward(dim,err,map,pos):
-    newpos = (pos[0]-1, pos[1])
-    return newpos[0] >= 0 and obstacle_distance() > dim + err and obstacleMapLookup(map,newpos) >= -1
-
-def mapCreate(bBox,dim):
-    map=[]
-    n = int(bBox[0]//dim)
-    m = int(bBox[1]//dim)
-    for i in range(n):
-        l=[]
-        for j in range(m):
-            l.append(-1)
-        map.append(l)
-    return map,(int(n//2),int(m//2)),(n,m)
+def tryBackward(err,map,pos):
+    return map.validCell(pos) and obstacle_distance() > map.dim + err and map.lookup(pos) >= -1
 
 
-def getMapDim(map):
-   return len(map), len(map[0])
+#movimento con ostacoli-------------------------------------------------------------------------------------------------------------
+
+def obstacleMoveTo(map,src,trg):
+    map.updateCell(trg,0)
+    cell= trg.copy()
+    visitati = {trg}
+    i=0
+    val=0
+    visitare=[]
+    #addneighbours deve arrivare a src partendo da trg
+    while addNeighbours(cell,src,map,visitati,visitare,val):
+        cell=visitare[i]
+        val = map.lookup(cell)
+        i+=1
+    display(str(map))
+    obstacleMoveRobot(map,src)
 
 
-def mapUpdate(map,cella,val):
-    map[cella[0]][cella[1]] = val
+def obstacleMoveRobot(map,pos): 
+    p = map.numCelle
+    s=0
+    while p != 0:
+        p = findDirection(map,pos)
+        turn(pos.th,ref = "ABS")
+        if pos.th%90 == 0:
+            s=map.dim
+        else:
+            s=map.dim*math.sqrt(2)
+        forward(s)
+        
 
 
 
-def obstacleMapLookup(map,pos):
-    return map[pos[0]][pos[1]]
+def findDirection(map,pos):
+    m=map.numCelle+1
+    for i in range(-1,2):
+        for j in range(-1,2):
+            cella = pos.tryUpdate(Pos(i,j))
+            val = map.lookup(cella)
+            if val >=0 and val < m and i*i + j*j != 2:
+                m=val
+                pos.update()
+                pos.th = getDir(i,j)
+                
+    return m 
+
+
+def getDir(a,b):
+    #sinistra
+    if a ==0   and b  ==1    :
+        return 90
+    #destra
+    elif a ==0   and b  ==-1    :
+        return -90   
+    #avanti
+    elif a ==1   and b  ==0    :
+        return 0
+    #indietro
+    elif a ==-1   and b  ==0    :
+        return 180
+    #alto sinistra
+    elif a ==1   and b  ==1    :
+        return 45
+    #alto destra
+    elif a ==1   and b  ==-1    :
+        return -45
+    #basso sinistra
+    elif a ==-1   and b  ==1    :
+        return 135
+    #basso destra
+    elif a ==-1   and b  ==-1    :
+        return -135
+
+
+
+
+
+
+
+def addNeighbours(cell,pos,map,visitati,visitare,val):
+    
+    for i in range(-1,2):
+        for j in range(-1,2):
+            cella = cell.tryUpdate(Pos(i,j))
+            if validCell(cella,visitati) and i*i + j*j != 2:
+                
+                if cella == pos :
+                    return False
+                map.updateCell(cella,val+1)
+                c = cella.copy()
+                visitare.append(c)
+                visitati.add(c)
+                
+    return True
+
+def validCell(cell,visitati):
+    return (cell not in visitati) and map.validCell(cell) and map.lookup(cell) != -3
 
 
 say("start")
 
+enableObstacleAvoidance(False)
 
-obstacleSistematicMapping((5,0.5),0.5,-0.1)
+mappa, posizione = obstacleSistematicMapping((1.5,1),0.5,0.1)
 
+say("finish mapping")
+
+target = Position(0,1)
+
+obstacleMoveTo(mappa,posizione,target)

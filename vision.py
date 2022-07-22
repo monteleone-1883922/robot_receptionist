@@ -7,9 +7,9 @@ from classi import Chair
 
 #from marrtino_apps.program.robot_cmd_ros import tag_id, tag_trigger
 
-#sys.path.append(os.getcwd() + "\marrtino_apps\program")
+sys.path.append(os.getcwd() + "\marrtino_apps\program")
 
-#from robot_cmd_ros import *
+from robot_cmd_ros import *
 
 
 
@@ -57,20 +57,24 @@ def fixedFaceDetection(img,size):
     return faces
 
 
-def findChairs2(directions):
+def findChairs2(directions,pos):
     # correggere in base a directions
     deg=4/directions
     n=0
     while n <4:
         right(deg)
+
         #trova sedia
         n+=deg
+        if pos[0 ]== 4 and pos[1] == 3 and n==deg:
+            say("chair found")
+            say("saving chair position")
+
 
 #versione 1
 def findChairs(img,pos,chairs,qrDecoder):
     data,bbox,rectifiedImage = qrDecoder.detectAndDecode(img)
     if data == "https://qr.net/TQGDFa":
-        say("lessgooo")
         
 
 
@@ -87,15 +91,5 @@ def findChairs(img,pos,chairs,qrDecoder):
 # def findChairs(img,dist,ang, dist):
 #     if tag_trigger() and tag_id() == 0:
 #         if ang:
-a = "C:\\Users\\Alex\\Downloads\\TQGDFa.png"
-
-imm = cv2.imread(a)
-
- 
-qrDecoder = cv2.QRCodeDetector()
-
-
-findChairs(imm,9,3,qrDecoder)
-
 
 
