@@ -71,10 +71,11 @@ def findChairs2(directions,pos):
             say("saving chair position")
 
 
-#versione 1
+#with qrcode and cv2
 def findChairs(img,pos,chairs,qrDecoder):
     data,bbox,rectifiedImage = qrDecoder.detectAndDecode(img)
     if data == "https://qr.net/TQGDFa":
+        chairs.append(Chair(pos))
         
 
 

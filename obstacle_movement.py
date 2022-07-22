@@ -1,6 +1,6 @@
 
 import math
-#from marrtino_apps.program.robot_receptionist.free_movement import mapLookup
+
 
 from robot_cmd_ros import *
 
@@ -13,9 +13,6 @@ from classi import Directions as Dir
 # mapping sistematico con ostacoli-------------------------------------------------------------------------------------------------
 def obstacleSistematicMapping(bBox,dim,err):
     map=Map(bBox,dim)
-    #mapDim = getMapDim(map)
-    #numCelle = mapDim[0] * mapDim[1]
-
     pos = Pos(0,0,0)
     map.updateCell(pos,-1)
     backward = False
@@ -74,7 +71,7 @@ def obstacleSistematicMapping(bBox,dim,err):
 
 def tryRight(err,map,pos):
     right(1)
-    if map.validCell(pos) and obstacle_distance() > map.dim + err and map.lookup(pos) >= 0 :
+    if map.validCell(pos) and obstacle_distance() > map.dim + err and (map.lookup(pos) >= 0 or  (map.lookup(pos)==-1 and backward)) :
         return True
     if map.validCell(pos) and obstacle_distance() <= map.dim + err:
         map.updateCell(pos,-3)
@@ -102,6 +99,8 @@ def tryBackward(err,map,pos):
 #movimento con ostacoli-------------------------------------------------------------------------------------------------------------
 
 def obstacleMoveTo(map,src,trg):
+    if not map.validCell(src) or not map.validCell(trg):
+      raise Exception("src or trg not in map")
     map.updateCell(trg,0)
     cell= trg.copy()
     visitati = {trg}
@@ -196,18 +195,7 @@ def addNeighbours(cell,pos,map,visitati,visitare,val):
                 
     return True
 
-def mapUpdate(map,cella,val):
-    map[cella[0]][cella[1]] = val
-
-
-def compareCell(a,b):
-    return a[0] == b[0] and a[1] == b[1]
-
 
 
 def validCell(cell,visitati):
     return (cell not in visitati) and map.validCell(cell) and map.lookup(cell) != -3
-
-def getMapDim(map):
-   return len(map), len(map[0])
-

@@ -17,7 +17,7 @@ class Map:
                 l.append(0)
             self.mappa.append(l)
 
-    def __str__(self) -> str:
+    def __str__(self):
         a=""
         for x in self.mappa:
             a = a + str(x) + "\n"
@@ -63,6 +63,18 @@ class Chair:
         self.pos = pos
         self.person = None
 
+    def sit(self,person):
+        self.person = person
+
+    def unsit(self):
+        self.person = None
+
+    def isEmpty(self):
+        return self.person is None
+
+    def __eq__(self, __o):
+        return self.pos == __o.pos
+
 
 class Position:
     def __init__(self,x,y,th=361):
@@ -71,12 +83,19 @@ class Position:
         self.th = th
         self.nextPosition = None
 
-    def __hash__(self) -> int:
+    def __hash__(self):
         return self.x+self.y + self.x*self.y
         
-    def __eq__(self, __o: object) -> bool:
+    def __eq__(self, __o):
         return self.x == __o.x and self.y == __o.y #and self.th == __o.th
     
+
+    def __str__(self) :
+        s = self.x + ", " + self.y 
+        if self.th != 361:
+            s = s + ", " + self.th
+        return s
+
     def copy(self):
         return Position(self.x,self.y,self.th)
 
